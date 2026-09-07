@@ -17,106 +17,2534 @@
       box-sizing: border-box;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    body {
-      margin: 0;
-      background: #111;
-      color: #fff;
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
     }
-    #canvasContainer {
+    /* Custom thin scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    /* Custom sleek range slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
-      height: 80vh;
+      height: 5px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
     }
-    .controls {
-      padding: 1rem;
+    input[type=range]::-webkit-slider-thumb {
+      height: 15px;
+      width: 15px;
+      border-radius: 9999px;
+      background: #0f172a;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform 0.1s ease;
     }
-    .control-group {
-      margin-bottom: 0.5rem;
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
     }
-    label {
-      display: block;
-      margin-bottom: 0.25rem;
-    }
-    input[type="range"] {
+    input[type=range]::-moz-range-track {
       width: 100%;
+      height: 5px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    input[type=range]::-moz-range-thumb {
+      height: 15px;
+      width: 15px;
+      border-radius: 9999px;
+      background: #0f172a;
+      cursor: pointer;
+      border: none;
     }
   </style>
 </head>
-<body>
-  <div id="canvasContainer"></div>
-  <div class="controls">
-    <div class="control-group">
-      <label for="power">Power (W)</label>
-      <input type="range" id="power" min="500" max="5000" step="100" value="2500" />
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-slate-200">
+
+  <!-- Application Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-2.5 flex items-center justify-between" style="box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2">
+        <div class="w-7 h-7 rounded bg-slate-900 flex items-center justify-center text-white">
+          <iconify-icon icon="solar:flame-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+        </div>
+        <div>
+          <span class="tracking-tight font-semibold text-base uppercase text-slate-900">GOLDAK SIM</span>
+          <span class="hidden sm:inline-block ml-2 text-xs text-slate-600 border-l border-slate-200 pl-2">Transient Thermal Welding Engine</span>
+        </div>
+      </div>
+      <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
+        Educational 3D Model
+      </span>
     </div>
-    <div class="control-group">
-      <label for="speed">Speed (mm/s)</label>
-      <input type="range" id="speed" min="1" max="30" step="1" value="15" />
+
+    <div class="flex items-center space-x-2 md:space-x-3">
+      <div class="hidden lg:flex items-center space-x-3 text-xs text-slate-600 bg-slate-100 px-3 py-1 rounded border border-slate-200">
+        <div><span class="text-slate-600">Arc:</span> <span id="hdr-arc-power" class="font-mono font-medium text-slate-800">3.60 kW</span></div>
+        <div class="text-slate-300">|</div>
+        <div><span class="text-slate-600">Effective:</span> <span id="hdr-eff-power" class="font-mono font-medium text-slate-800">2.88 kW</span></div>
+        <div class="text-slate-300">|</div>
+        <div><span class="text-slate-600">Heat In:</span> <span id="hdr-heat-input" class="font-mono font-medium text-slate-800">0.58 kJ/mm</span></div>
+      </div>
+
+      <button id="btn-load-example" type="button" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-colors">
+        <iconify-icon icon="solar:refresh-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+        <span>LOAD EXAMPLE</span>
+      </button>
+
+      <button id="btn-run-sim" type="button" class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-sm">
+        <iconify-icon icon="solar:play-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+        <span id="btn-run-text">Run Simulation</span>
+      </button>
     </div>
-    <div class="control-group">
-      <label for="angle">Angle (deg)</label>
-      <input type="range" id="angle" min="-45" max="45" step="5" value="0" />
-    </div>
-    <div class="control-group">
-      <label for="axisRatio">Axis Ratio</label>
-      <input type="range" id="axisRatio" min="0.1" max="2" step="0.1" value="1" />
-    </div>
-    <div class="control-group">
-      <label for="efficiency">Efficiency</label>
-      <input type="range" id="efficiency" min="0.1" max="1" step="0.1" value="0.8" />
-    </div>
-  </div>
+  </header>
+
+  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden" style="min-height: calc(100vh - 53px);">
+    
+    <!-- LEFT PANEL: Parameters & Physics Setup -->
+    <aside class="w-full lg:w-96 xl:w-[410px] bg-white border-r border-slate-200 overflow-y-auto p-4 space-y-4 flex-shrink-0">
+      
+      <!-- Panel Header Info -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div class="flex items-center space-x-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <iconify-icon icon="solar:tuning-linear" stroke-width="1.5" class="text-sm text-slate-600"></iconify-icon>
+          <span>Model Parameters</span>
+        </div>
+        <span id="sim-status-chip" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+          Ready
+        </span>
+      </div>
+
+      <!-- Section 1: Arc & Welding Parameters -->
+      <div class="space-y-3 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:bolt-linear" stroke-width="1.5" class="text-amber-500 text-sm"></iconify-icon>
+            <span>Welding Inputs</span>
+          </label>
+          <span class="text-xs text-slate-600">GMAW / SMAW</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Current (I)</span>
+              <span id="val-current" class="font-mono font-medium text-slate-800">180 A</span>
+            </div>
+            <input id="input-current" type="range" min="60" max="360" step="5" value="180" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Voltage (V)</span>
+              <span id="val-voltage" class="font-mono font-medium text-slate-800">24 V</span>
+            </div>
+            <input id="input-voltage" type="range" min="12" max="42" step="1" value="24" class="w-full">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Efficiency (η)</span>
+              <span id="val-efficiency" class="font-mono font-medium text-slate-800">0.80</span>
+            </div>
+            <input id="input-efficiency" type="range" min="0.40" max="0.95" step="0.05" value="0.80" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Speed (v)</span>
+              <span id="val-speed" class="font-mono font-medium text-slate-800">5.0 mm/s</span>
+            </div>
+            <input id="input-speed" type="range" min="1.0" max="18.0" step="0.5" value="5.0" class="w-full">
+          </div>
+        </div>
+
+        <!-- Live Calculation Strip -->
+        <div class="grid grid-cols-3 gap-1 pt-2 border-t border-slate-200 text-center text-xs">
+          <div class="bg-white p-1.5 rounded border border-slate-200">
+            <span class="text-slate-600 block">Arc Power</span>
+            <span id="calc-arc-power" class="font-mono font-medium text-slate-800">4.32 kW</span>
+          </div>
+          <div class="bg-white p-1.5 rounded border border-slate-200">
+            <span class="text-slate-600 block">Effective Q</span>
+            <span id="calc-eff-power" class="font-mono font-medium text-slate-800">3.46 kW</span>
+          </div>
+          <div class="bg-white p-1.5 rounded border border-slate-200">
+            <span class="text-slate-600 block">Heat In (H)</span>
+            <span id="calc-heat-input" class="font-mono font-medium text-slate-800">0.69 kJ/mm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Goldak Double-Ellipsoid Heat Source Model -->
+      <div class="space-y-3 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:box-linear" stroke-width="1.5" class="text-indigo-500 text-sm"></iconify-icon>
+            <span>Goldak Double-Ellipsoid</span>
+          </label>
+          <span class="text-xs text-indigo-600 font-mono font-medium">ff + fr = 2.0</span>
+        </div>
+
+        <!-- Dynamic Live SVG Schematic -->
+        <div class="bg-white rounded border border-slate-200 p-2 flex flex-col items-center">
+          <div class="w-full flex justify-between text-xs text-slate-600 mb-1 px-1">
+            <span>Source Shape (X-Y Top View)</span>
+            <span class="text-slate-600 font-mono">Travel: +X &rarr;</span>
+          </div>
+          <svg id="goldak-svg-schematic" class="w-full h-24 overflow-visible" viewBox="0 0 300 100"></svg>
+        </div>
+
+        <!-- Ellipsoid Geometric Parameters -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Half-width (a)</span>
+              <span id="val-goldak-a" class="font-mono font-medium text-slate-800">3.5 mm</span>
+            </div>
+            <input id="input-goldak-a" type="range" min="1.5" max="8.0" step="0.5" value="3.5" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Depth (b)</span>
+              <span id="val-goldak-b" class="font-mono font-medium text-slate-800">4.5 mm</span>
+            </div>
+            <input id="input-goldak-b" type="range" min="1.5" max="10.0" step="0.5" value="4.5" class="w-full">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Front (c<sub>f</sub>)</span>
+              <span id="val-goldak-cf" class="font-mono font-medium text-slate-800">3.0 mm</span>
+            </div>
+            <input id="input-goldak-cf" type="range" min="1.0" max="8.0" step="0.5" value="3.0" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Rear (c<sub>r</sub>)</span>
+              <span id="val-goldak-cr" class="font-mono font-medium text-slate-800">9.0 mm</span>
+            </div>
+            <input id="input-goldak-cr" type="range" min="3.0" max="18.0" step="0.5" value="9.0" class="w-full">
+          </div>
+        </div>
+
+        <!-- Energy Fractions -->
+        <div class="pt-1">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-600">Front / Rear Fraction (f<sub>f</sub> / f<sub>r</sub>)</span>
+            <span id="val-goldak-fractions" class="font-mono font-medium text-slate-800">0.60 / 1.40</span>
+          </div>
+          <input id="input-goldak-ff" type="range" min="0.2" max="1.0" step="0.05" value="0.6" class="w-full">
+        </div>
+      </div>
+
+      <!-- Section 3: Material Selection & Thermophysical Properties -->
+      <div class="space-y-2.5 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:layers-linear" stroke-width="1.5" class="text-slate-600 text-sm"></iconify-icon>
+            <span>Material Selection</span>
+          </label>
+          <span id="mat-tmelt-label" class="text-xs font-mono text-slate-600">T<sub>melt</sub>: 1510°C</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5">
+          <button id="mat-steel" type="button" class="mat-preset-btn active px-2 py-1 rounded text-xs font-medium border bg-slate-900 text-white border-slate-900 transition-colors">
+            AISI 1020
+          </button>
+          <button id="mat-ss304" type="button" class="mat-preset-btn px-2 py-1 rounded text-xs font-medium border bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition-colors">
+            SS 304
+          </button>
+          <button id="mat-al6061" type="button" class="mat-preset-btn px-2 py-1 rounded text-xs font-medium border bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition-colors">
+            Al 6061
+          </button>
+        </div>
+
+        <details class="text-xs group">
+          <summary class="cursor-pointer text-slate-600 hover:text-slate-800 font-medium py-1 list-none flex items-center justify-between">
+            <span>Thermophysical Properties (k, &rho;, C<sub>p</sub>, h)</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="transform group-open:rotate-180 transition-transform"></iconify-icon>
+          </summary>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
+            <div>
+              <span class="text-slate-600 block">Cond. k [W/m·K]</span>
+              <input id="input-mat-k" type="number" value="48" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono mt-0.5">
+            </div>
+            <div>
+              <span class="text-slate-600 block">Density &rho; [kg/m³]</span>
+              <input id="input-mat-rho" type="number" value="7850" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono mt-0.5">
+            </div>
+            <div>
+              <span class="text-slate-600 block">Specific Heat C<sub>p</sub> [J/kg·K]</span>
+              <input id="input-mat-cp" type="number" value="480" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono mt-0.5">
+            </div>
+            <div>
+              <span class="text-slate-600 block">Melt Temp T<sub>m</sub> [°C]</span>
+              <input id="input-mat-tmelt" type="number" value="1510" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono mt-0.5">
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Section 4: Butt Joint Geometry Configuration -->
+      <div class="space-y-2.5 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:ruler-linear" stroke-width="1.5" class="text-teal-600 text-sm"></iconify-icon>
+            <span>Butt Joint Geometry</span>
+          </label>
+          <span class="text-xs text-slate-600">Plate: 100 x 50 mm</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5">
+          <button id="joint-square" type="button" class="joint-type-btn px-2 py-1 rounded text-xs font-medium border bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition-colors">
+            Square Butt
+          </button>
+          <button id="joint-single-v" type="button" class="joint-type-btn active px-2 py-1 rounded text-xs font-medium border bg-slate-900 text-white border-slate-900 transition-colors">
+            Single-V
+          </button>
+          <button id="joint-double-v" type="button" class="joint-type-btn px-2 py-1 rounded text-xs font-medium border bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition-colors">
+            Double-V
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Thickness (t)</span>
+              <span id="val-joint-thick" class="font-mono font-medium text-slate-800">8.0 mm</span>
+            </div>
+            <input id="input-joint-thick" type="range" min="4" max="16" step="1" value="8" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Groove Angle (&theta;)</span>
+              <span id="val-joint-angle" class="font-mono font-medium text-slate-800">60°</span>
+            </div>
+            <input id="input-joint-angle" type="range" min="30" max="90" step="5" value="60" class="w-full">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Root Gap (g)</span>
+              <span id="val-joint-gap" class="font-mono font-medium text-slate-800">1.5 mm</span>
+            </div>
+            <input id="input-joint-gap" type="range" min="0.0" max="4.0" step="0.5" value="1.5" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Root Face (f)</span>
+              <span id="val-joint-face" class="font-mono font-medium text-slate-800">1.5 mm</span>
+            </div>
+            <input id="input-joint-face" type="range" min="0.0" max="4.0" step="0.5" value="1.5" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Torch Trajectory & Oscillation -->
+      <div class="space-y-2.5 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:compass-linear" stroke-width="1.5" class="text-blue-600 text-sm"></iconify-icon>
+            <span>Torch Trajectory</span>
+          </label>
+          <span id="val-traj-name" class="text-xs text-slate-600 font-medium">Straight</span>
+        </div>
+
+        <select id="select-trajectory" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-500">
+          <option value="straight">Straight Stringer Bead</option>
+          <option value="zigzag">Zigzag (Triangle Wave Weave)</option>
+          <option value="sine">Sinusoidal Weave Pattern</option>
+          <option value="circular">Circular / Oscillating Motion</option>
+        </select>
+
+        <div id="weave-controls" class="grid grid-cols-2 gap-2.5 pt-1 hidden">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Weave Width (A)</span>
+              <span id="val-weave-amp" class="font-mono font-medium text-slate-800">2.5 mm</span>
+            </div>
+            <input id="input-weave-amp" type="range" min="1.0" max="6.0" step="0.5" value="2.5" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600">Frequency (f)</span>
+              <span id="val-weave-freq" class="font-mono font-medium text-slate-800">0.8 Hz</span>
+            </div>
+            <input id="input-weave-freq" type="range" min="0.2" max="2.5" step="0.1" value="0.8" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 6: Thermal Probe Location -->
+      <div class="space-y-2.5 bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
+            <iconify-icon icon="solar:slider-vertical-linear" stroke-width="1.5" class="text-rose-500 text-sm"></iconify-icon>
+            <span>Temperature Probe Point</span>
+          </label>
+          <span id="val-probe-coord" class="text-xs font-mono text-slate-600">(45, 2, 1) mm</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <div>
+            <span class="text-slate-600 block mb-0.5">X [mm]</span>
+            <input id="input-probe-x" type="number" min="0" max="100" value="45" class="w-full bg-white border border-slate-200 rounded px-2 py-1 font-mono">
+          </div>
+          <div>
+            <span class="text-slate-600 block mb-0.5">Y [mm]</span>
+            <input id="input-probe-y" type="number" min="-25" max="25" value="2" class="w-full bg-white border border-slate-200 rounded px-2 py-1 font-mono">
+          </div>
+          <div>
+            <span class="text-slate-600 block mb-0.5">Z (Depth)</span>
+            <input id="input-probe-z" type="number" min="0" max="16" value="1" class="w-full bg-white border border-slate-200 rounded px-2 py-1 font-mono">
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT PANEL: Visualization & Results Workspace -->
+    <section class="flex-1 flex flex-col min-w-0 bg-slate-100 overflow-hidden">
+      
+      <!-- Top Interactive Playback & Timeline Controls -->
+      <div class="bg-white border-b border-slate-200 px-4 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2.5 flex-shrink-0">
+        <!-- Playback action buttons -->
+        <div class="flex items-center space-x-2">
+          <button id="btn-play-pause" type="button" class="inline-flex items-center justify-center w-8 h-8 rounded bg-slate-900 hover:bg-slate-800 text-white transition-colors" title="Play/Pause (Space)">
+            <iconify-icon id="icon-play-pause" icon="solar:play-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          </button>
+          <button id="btn-restart" type="button" class="inline-flex items-center justify-center w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors" title="Restart to t=0">
+            <iconify-icon icon="solar:restart-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          </button>
+          
+          <div class="h-5 w-px bg-slate-200 mx-1"></div>
+
+          <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+            <span>Time:</span>
+            <span id="txt-current-time" class="font-mono font-medium text-slate-900 w-14 text-left">0.00 s</span>
+            <span class="text-slate-600">/ <span id="txt-total-time" class="font-mono">20.0 s</span></span>
+          </div>
+        </div>
+
+        <!-- Scrubber Slider -->
+        <div class="flex-1 flex items-center space-x-2 max-w-xl mx-2">
+          <iconify-icon icon="solar:stopwatch-linear" stroke-width="1.5" class="text-slate-600 text-sm hidden sm:inline-block"></iconify-icon>
+          <input id="timeline-scrubber" type="range" min="0" max="20" step="0.1" value="0" class="w-full">
+        </div>
+
+        <!-- Playback speed & auxiliary controls -->
+        <div class="flex items-center space-x-2 text-xs">
+          <div class="flex items-center bg-slate-100 rounded border border-slate-200 p-0.5">
+            <button class="speed-btn active px-2 py-0.5 rounded text-xs font-mono font-medium text-slate-900 bg-white shadow-xs" data-speed="1.0">1x</button>
+            <button class="speed-btn px-2 py-0.5 rounded text-xs font-mono text-slate-600 hover:text-slate-900" data-speed="2.0">2x</button>
+            <button class="speed-btn px-2 py-0.5 rounded text-xs font-mono text-slate-600 hover:text-slate-900" data-speed="4.0">4x</button>
+          </div>
+
+          <button id="btn-reset-camera" type="button" class="inline-flex items-center space-x-1 px-2 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition-colors" title="Reset 3D camera viewpoint">
+            <iconify-icon icon="solar:camera-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+            <span class="hidden xl:inline">Reset Camera</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Thermal Color Scale Legend Bar -->
+      <div class="bg-white border-b border-slate-200 px-4 py-1.5 flex items-center justify-between text-xs flex-shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="font-medium text-slate-600 flex items-center space-x-1">
+            <iconify-icon icon="solar:flame-linear" stroke-width="1.5" class="text-amber-500"></iconify-icon>
+            <span>Thermal Scale (°C):</span>
+          </span>
+          <div class="flex items-center space-x-1.5">
+            <span class="font-mono text-slate-600">25°</span>
+            <div class="w-48 sm:w-64 md:w-80 h-3.5 rounded border border-slate-300" style="background: linear-gradient(to right, #475569 0%, #ca8a04 25%, #ea580c 55%, #dc2626 80%, #fef08a 95%, #ffffff 100%);"></div>
+            <span id="legend-max-temp" class="font-mono font-medium text-slate-900">&ge; 1800°</span>
+          </div>
+        </div>
+
+        <div class="hidden sm:flex items-center space-x-3 text-slate-600">
+          <span class="flex items-center space-x-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-white border border-slate-400 inline-block"></span>
+            <span>Melt Pool (&ge;T<sub>m</sub>)</span>
+          </span>
+          <span class="flex items-center space-x-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+            <span>HAZ (&ge;727°C)</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (5 Result Views) -->
+      <div class="bg-white border-b border-slate-200 px-4 flex space-x-1 sm:space-x-4 flex-shrink-0">
+        <button class="view-tab-btn active py-2.5 px-2 sm:px-3 text-xs font-semibold text-slate-900 border-b-2 border-slate-900 flex items-center space-x-1.5" data-tab="tab-3d">
+          <iconify-icon icon="solar:box-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <span>3D Field</span>
+        </button>
+        <button class="view-tab-btn py-2.5 px-2 sm:px-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5" data-tab="tab-top">
+          <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <span>Top View</span>
+        </button>
+        <button class="view-tab-btn py-2.5 px-2 sm:px-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5" data-tab="tab-cross">
+          <iconify-icon icon="solar:scissors-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <span>Cross Section</span>
+        </button>
+        <button class="view-tab-btn py-2.5 px-2 sm:px-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5" data-tab="tab-history">
+          <iconify-icon icon="solar:chart-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <span>Temp History</span>
+        </button>
+        <button class="view-tab-btn py-2.5 px-2 sm:px-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5" data-tab="tab-assessment">
+          <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <span>Assessment</span>
+        </button>
+      </div>
+
+      <!-- Tab Display Containers -->
+      <div class="flex-1 relative overflow-hidden">
+        
+        <!-- Tab 1: 3D Three.js Field -->
+        <div id="tab-3d" class="tab-pane absolute inset-0 flex flex-col">
+          <div id="threejs-canvas-container" class="w-full h-full relative bg-slate-900">
+            <!-- 3D Overlay Toolbar -->
+            <div class="absolute top-3 left-3 z-10 flex flex-wrap gap-2 text-xs">
+              <label class="inline-flex items-center space-x-1.5 bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded border border-slate-700 cursor-pointer shadow-sm">
+                <input id="toggle-3d-torch" type="checkbox" checked class="rounded border-slate-600 text-slate-900 focus:ring-0">
+                <span>Welding Torch</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded border border-slate-700 cursor-pointer shadow-sm">
+                <input id="toggle-3d-wireframe" type="checkbox" class="rounded border-slate-600 text-slate-900 focus:ring-0">
+                <span>Mesh Grid</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded border border-slate-700 cursor-pointer shadow-sm">
+                <input id="toggle-3d-isotherm" type="checkbox" checked class="rounded border-slate-600 text-slate-900 focus:ring-0">
+                <span>Melt Pool Contour</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded border border-slate-700 cursor-pointer shadow-sm">
+                <input id="toggle-3d-probe" type="checkbox" checked class="rounded border-slate-600 text-slate-900 focus:ring-0">
+                <span>Probe Pin</span>
+              </label>
+            </div>
+
+            <!-- 3D HUD Information -->
+            <div class="absolute bottom-3 left-3 z-10 bg-slate-900/85 backdrop-blur-sm text-slate-200 border border-slate-700 p-2.5 rounded text-xs space-y-1 font-mono">
+              <div>Torch: <span id="hud-torch-pos" class="text-amber-400">X: 0.0, Y: 0.0, Z: 0.0 mm</span></div>
+              <div>Peak Temp: <span id="hud-peak-temp" class="text-rose-400">25.0 °C</span></div>
+              <div>Melt Status: <span id="hud-melt-status" class="text-emerald-400">Solid Workpiece</span></div>
+            </div>
+
+            <div class="absolute bottom-3 right-3 z-10 bg-slate-900/70 text-slate-300 text-xs px-2 py-1 rounded pointer-events-none">
+              Rotate: Left Click + Drag | Pan: Right Click + Drag | Zoom: Scroll
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Top View (2D Surface Map) -->
+        <div id="tab-top" class="tab-pane absolute inset-0 hidden flex-col p-4 bg-slate-100 overflow-auto">
+          <div class="bg-white rounded-lg border border-slate-200 p-4 max-w-4xl mx-auto w-full shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Workpiece Surface Thermal Map (X-Y Plane)</h3>
+                <p class="text-xs text-slate-600">Z = 0 mm (Top surface). Dashed line shows torch trajectory and melt boundary.</p>
+              </div>
+              <div id="top-hover-coords" class="text-xs font-mono bg-slate-50 border border-slate-200 px-2.5 py-1 rounded text-slate-700">
+                Cursor: X: -- mm, Y: -- mm | T: -- °C
+              </div>
+            </div>
+
+            <div class="relative flex justify-center items-center bg-slate-900 rounded p-2 overflow-hidden" style="min-height: 340px;">
+              <canvas id="canvas-top-view" class="max-w-full cursor-crosshair"></canvas>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between mt-3 text-xs text-slate-600 pt-2 border-t border-slate-100">
+              <div class="flex items-center space-x-4">
+                <span class="flex items-center space-x-1.5">
+                  <span class="w-3 h-0.5 bg-amber-400 inline-block"></span>
+                  <span>Torch Trajectory Path</span>
+                </span>
+                <span class="flex items-center space-x-1.5">
+                  <span class="w-3 h-0.5 border-t border-dashed border-white inline-block"></span>
+                  <span>Melt Pool Boundary (T &ge; T<sub>m</sub>)</span>
+                </span>
+                <span class="flex items-center space-x-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full border border-rose-400 bg-rose-500/30 inline-block"></span>
+                  <span>Probe Pin Location</span>
+                </span>
+              </div>
+              <span class="font-mono">Plate: 100 x 50 mm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Cross Section (Y-Z Plane) -->
+        <div id="tab-cross" class="tab-pane absolute inset-0 hidden flex-col p-4 bg-slate-100 overflow-auto">
+          <div class="bg-white rounded-lg border border-slate-200 p-4 max-w-4xl mx-auto w-full shadow-xs space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Transverse Cross-Section (Y-Z Plane)</h3>
+                <p class="text-xs text-slate-600">Showing butt joint groove, thermal penetration depth, and molten pool boundary.</p>
+              </div>
+
+              <!-- Slice position slider -->
+              <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded">
+                <span class="text-xs text-slate-600 font-medium">Slice X:</span>
+                <input id="input-slice-x" type="range" min="0" max="100" step="1" value="50" class="w-28 sm:w-36">
+                <span id="txt-slice-x" class="font-mono text-xs font-semibold text-slate-900">50 mm</span>
+                <button id="btn-sync-slice" type="button" class="text-xs text-blue-600 hover:underline ml-1" title="Snap slice to current torch position">
+                  Snap Torch
+                </button>
+              </div>
+            </div>
+
+            <div class="relative flex justify-center items-center bg-slate-900 rounded p-2 overflow-hidden" style="min-height: 320px;">
+              <canvas id="canvas-cross-view" class="max-w-full"></canvas>
+            </div>
+
+            <!-- Groove & Penetration Readout Metrics -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Melt Depth (d<sub>m</sub>)</span>
+                <span id="val-melt-depth" class="font-mono font-semibold text-slate-900">4.2 mm</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Melt Width (w<sub>m</sub>)</span>
+                <span id="val-melt-width" class="font-mono font-semibold text-slate-900">7.8 mm</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Penetration %</span>
+                <span id="val-penetration-pct" class="font-mono font-semibold text-slate-900">52.5%</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Joint Penetration Status</span>
+                <span id="val-penetration-verdict" class="font-medium text-blue-600">Partial Joint Fusion</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Temp History (T vs t at Probe) -->
+        <div id="tab-history" class="tab-pane absolute inset-0 hidden flex-col p-4 bg-slate-100 overflow-auto">
+          <div class="bg-white rounded-lg border border-slate-200 p-4 max-w-4xl mx-auto w-full shadow-xs space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Thermal Cycle: Temperature vs. Time Curve</h3>
+                <p class="text-xs text-slate-600">Measured at probe coordinate <span id="txt-history-probe-coords" class="font-mono font-medium text-slate-800">(45, 2, 1) mm</span>.</p>
+              </div>
+
+              <!-- Quick preset probe positions -->
+              <div class="flex items-center space-x-1.5 text-xs">
+                <span class="text-slate-600">Probe preset:</span>
+                <button class="probe-preset-btn px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100" data-x="45" data-y="0" data-z="0">Centerline</button>
+                <button class="probe-preset-btn px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100" data-x="45" data-y="3" data-z="1">HAZ (3mm)</button>
+                <button class="probe-preset-btn px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100" data-x="45" data-y="6" data-z="2">Far Field</button>
+              </div>
+            </div>
+
+            <div class="relative bg-white rounded border border-slate-200 p-2 flex justify-center items-center" style="min-height: 320px;">
+              <canvas id="canvas-history-graph" class="w-full h-72"></canvas>
+            </div>
+
+            <!-- Key Metallurgical Cooling Metrics -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Peak Temperature</span>
+                <span id="metric-peak-temp" class="font-mono font-semibold text-slate-900">1420 °C</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Time to Peak (t<sub>peak</sub>)</span>
+                <span id="metric-time-peak" class="font-mono font-semibold text-slate-900">7.2 s</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Cooling Time t<sub>8/5</sub> (800&rarr;500°C)</span>
+                <span id="metric-t85" class="font-mono font-semibold text-emerald-600">6.8 s</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                <span class="text-slate-600 block">Max Heating Rate</span>
+                <span id="metric-heating-rate" class="font-mono font-semibold text-slate-900">420 °C/s</span>
+              </div>
+            </div>
+            
+            <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200 leading-relaxed">
+              <span class="font-semibold text-slate-700">Metallurgical Note on t<sub>8/5</sub>:</span> The cooling time from 800°C to 500°C governs austenite transformation into martensite, bainite, or ferrite-pearlite in carbon steels. Shorter t<sub>8/5</sub> (&lt; 3s) promotes brittle martensite, while moderate t<sub>8/5</sub> (5-15s) yields balanced toughness and hardness.
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Assessment & Engineering Verification -->
+        <div id="tab-assessment" class="tab-pane absolute inset-0 hidden flex-col p-4 bg-slate-100 overflow-auto">
+          <div class="bg-white rounded-lg border border-slate-200 p-5 max-w-4xl mx-auto w-full shadow-xs space-y-4">
+            
+            <!-- Overall Status Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Thermal Weldability & Penetration Assessment</h3>
+                <p class="text-xs text-slate-600">Evaluation based on Goldak heat input, joint geometry, and material thermophysical properties.</p>
+              </div>
+              <span id="assessment-badge" class="inline-flex items-center px-3 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                Evaluating...
+              </span>
+            </div>
+
+            <!-- Dynamic Warning Banner for Full-Thickness Melting / Blow-through -->
+            <div id="banner-burn-through" class="hidden p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-1">
+              <div class="flex items-center space-x-1.5 font-semibold text-amber-950">
+                <iconify-icon icon="solar:danger-triangle-linear" stroke-width="1.5" class="text-base text-amber-600"></iconify-icon>
+                <span>⚠ FULL-THICKNESS MELTING PREDICTED</span>
+              </div>
+              <p class="leading-relaxed text-amber-800">
+                The computed weld pool depth (<span id="burn-depth" class="font-mono font-medium">8.4 mm</span>) meets or exceeds the plate thickness (<span id="burn-thick" class="font-mono font-medium">8.0 mm</span>). In production welding, this indicates an acute risk of weld pool drop-out, excessive root melt-through, or blow-through unless backed with a ceramic/copper backing bar.
+              </p>
+              <div class="text-slate-600 font-medium pt-1">
+                * Note: This is an educational numerical simulation model and is not certified for weld procedure qualification (WPS/PQR).
+              </div>
+            </div>
+
+            <!-- Sound Penetration Notice -->
+            <div id="banner-sound-weld" class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
+              <div class="flex items-center space-x-1.5 font-semibold text-emerald-950">
+                <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-base text-emerald-600"></iconify-icon>
+                <span>Nominal Partial Joint Penetration</span>
+              </div>
+              <p class="text-emerald-800">
+                The molten boundary is contained within the plate thickness with healthy root fusion. Cooling rate t<sub>8/5</sub> is within standard procedural margins.
+              </p>
+            </div>
+
+            <!-- Quantitative Diagnostic Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5">
+                <span class="text-slate-600 font-medium block">Energy & Heat Input</span>
+                <div class="flex justify-between"><span class="text-slate-600">Arc Power (VI):</span> <span id="ass-arc" class="font-mono font-medium">4.32 kW</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Net Power (Q):</span> <span id="ass-eff" class="font-mono font-medium">3.46 kW</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Linear Heat Input:</span> <span id="ass-heat" class="font-mono font-medium">0.69 kJ/mm</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Travel Speed:</span> <span id="ass-speed" class="font-mono font-medium">5.0 mm/s</span></div>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5">
+                <span class="text-slate-600 font-medium block">Pool Dimensions</span>
+                <div class="flex justify-between"><span class="text-slate-600">Pool Length:</span> <span id="ass-length" class="font-mono font-medium">12.0 mm</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Top Width:</span> <span id="ass-width" class="font-mono font-medium">7.8 mm</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Max Depth:</span> <span id="ass-depth" class="font-mono font-medium">4.5 mm</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">% Thickness:</span> <span id="ass-pct" class="font-mono font-medium">56.2%</span></div>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5">
+                <span class="text-slate-600 font-medium block">Thermal Metallurgy</span>
+                <div class="flex justify-between"><span class="text-slate-600">Max Plate Temp:</span> <span id="ass-max-temp" class="font-mono font-medium">1940 °C</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">t<sub>8/5</sub> Cooling Time:</span> <span id="ass-t85" class="font-mono font-medium">6.8 s</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">HAZ Boundary (727°):</span> <span id="ass-haz" class="font-mono font-medium">~ 3.2 mm</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Material Tmelt:</span> <span id="ass-tmelt" class="font-mono font-medium">1510 °C</span></div>
+              </div>
+            </div>
+
+            <!-- Collapsible Assumptions & Physics Explanations -->
+            <details class="text-xs group bg-slate-50 rounded-lg border border-slate-200 p-3">
+              <summary class="cursor-pointer text-slate-800 font-medium list-none flex items-center justify-between">
+                <span class="flex items-center space-x-1.5">
+                  <iconify-icon icon="solar:info-circle-linear" stroke-width="1.5" class="text-slate-600 text-sm"></iconify-icon>
+                  <span>Model Assumptions, Governing Equations & Disclaimers</span>
+                </span>
+                <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="transform group-open:rotate-180 transition-transform text-slate-600"></iconify-icon>
+              </summary>
+              <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600 space-y-2 leading-relaxed">
+                <p>
+                  <strong>1. Goldak Double-Ellipsoid Volumetric Density:</strong> The power density distributed within the workpiece is formulated as:
+                </p>
+                <div class="font-mono bg-white p-2 rounded border border-slate-200 text-slate-800">
+                  q<sub>f,r</sub>(x,y,z) = [6&radic;3 &middot; f<sub>f,r</sub> &middot; Q] / [a &middot; b &middot; c<sub>f,r</sub> &middot; &pi;&radic;&pi;] &middot; exp(-3x&sup2;/c<sub>f,r</sub>&sup2; - 3y&sup2;/a&sup2; - 3z&sup2;/b&sup2;)
+                </div>
+                <p>
+                  where <em>a</em> is semi-width, <em>b</em> is penetration depth, <em>c<sub>f</sub></em> and <em>c<sub>r</sub></em> are front and rear ellipsoid lengths, and <em>f<sub>f</sub> + f<sub>r</sub> = 2</em> guarantees conservation of total effective thermal power <em>Q = &eta;VI</em>.
+                </p>
+                <p>
+                  <strong>2. Conduction vs. Convection:</strong> The simulation computes 3D transient heat conduction with boundary radiation/convection heat losses. Fluid convection in the melt pool (Marangoni flow driven by surface tension gradients) is parameterized into effective thermal conductivity and the Goldak source shape.
+                </p>
+                <p>
+                  <strong>3. Educational Scope:</strong> This interactive simulator is built for instructional purposes to help students and welding engineers visualize moving heat sources, transient thermal gradients, and the metallurgical significance of cooling times.
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
   <script>
-    // Three.js scene setup
-    const container = document.getElementById('canvasContainer');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    camera.position.set(0, 1, 5);
-    controls.update();
-    // Light
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
-    scene.add(light);
-    // Simple ground plane
-    const planeGeometry = new THREE.PlaneGeometry(20, 20);
-    const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, side: THREE.DoubleSide });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x = - Math.PI / 2;
-    scene.add(plane);
-    // Placeholder for heat source geometry (sphere)
-    const sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-    const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff4500 });
-    const source = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    scene.add(source);
-    // Update function (simplified placeholder)
-    function updateSimulation() {
-      const power = parseFloat(document.getElementById('power').value);
-      const speed = parseFloat(document.getElementById('speed').value);
-      const angle = parseFloat(document.getElementById('angle').value) * Math.PI / 180;
-      const axisRatio = parseFloat(document.getElementById('axisRatio').value);
-      const efficiency = parseFloat(document.getElementById('efficiency').value);
-      // Simplified visual update: move source based on speed and angle
-      const time = Date.now() * 0.001;
-      source.position.x = Math.cos(angle) * speed * time * 0.01;
-      source.position.z = Math.sin(angle) * speed * time * 0.01;
-      source.scale.set(1, 1, axisRatio);
-      source.material.color.setHSL(0.05, 1, Math.max(0.3, efficiency));
+    /* Goldak Welding Thermal Simulator - Simulation Core & UI Engine */
+
+    // Global application state
+    const state = {
+      // Welding params
+      current: 180,       // A
+      voltage: 24,        // V
+      efficiency: 0.80,   // fraction
+      speed: 5.0,         // mm/s
+
+      // Goldak double-ellipsoid params
+      goldak: {
+        a: 3.5,    // half-width (y)
+        b: 4.5,    // depth (z)
+        cf: 3.0,   // front length (x)
+        cr: 9.0,   // rear length (x)
+        ff: 0.6,   // front fraction
+        fr: 1.4    // rear fraction (ff + fr = 2.0)
+      },
+
+      // Material properties (defaults: AISI 1020 Carbon Steel)
+      material: {
+        name: 'AISI 1020 Carbon Steel',
+        k: 48,          // W/(m·K)
+        rho: 7850,      // kg/m³
+        cp: 480,        // J/(kg·K)
+        tMelt: 1510,    // °C
+        t0: 25,         // °C (ambient)
+        h: 15           // W/(m²·K)
+      },
+
+      // Joint geometry
+      joint: {
+        type: 'single-v',  // 'square', 'single-v', 'double-v'
+        thickness: 8.0,    // mm
+        angle: 60,         // degrees
+        rootGap: 1.5,      // mm
+        rootFace: 1.5      // mm
+      },
+
+      // Trajectory
+      trajectory: {
+        type: 'straight', // 'straight', 'zigzag', 'sine', 'circular'
+        amplitude: 2.5,   // mm
+        frequency: 0.8    // Hz
+      },
+
+      // Probe location
+      probe: {
+        x: 45, // mm
+        y: 2,  // mm
+        z: 1   // mm
+      },
+
+      // Cross-section slice location
+      sliceX: 50, // mm
+
+      // Simulation timeline state
+      currentTime: 0.0,
+      totalTime: 24.0, // seconds
+      isPlaying: false,
+      playbackSpeed: 1.0,
+      animFrameId: null,
+      lastFrameTimestamp: null,
+
+      // Pre-calculated cache
+      timeSteps: 60,
+      snapshots: [], // cached 2D top grids and key metrics over time
+      historyCurve: [], // T vs t at probe
+      activeTab: 'tab-3d'
+    };
+
+    // Derived thermal diffusivity: alpha = k / (rho * cp) in mm^2/s
+    function getDiffusivity() {
+      const alphaM2S = state.material.k / (state.material.rho * state.material.cp);
+      return alphaM2S * 1.0e6; // convert to mm^2/s
     }
-    // Event listeners for controls
-    document.querySelectorAll('input[type="range"]').forEach(inp => {
-      inp.addEventListener('input', updateSimulation);
-    });
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
+
+    // Live power and heat input calculation
+    function computeWeldingMetrics() {
+      const arcPower = state.voltage * state.current; // W
+      const effPower = state.efficiency * arcPower;   // W
+      const heatInput = effPower / state.speed;       // J/mm
+      const heatInputKJ = heatInput / 1000;           // kJ/mm
+
+      return {
+        arcPowerW: arcPower,
+        arcPowerKW: arcPower / 1000,
+        effPowerW: effPower,
+        effPowerKW: effPower / 1000,
+        heatInputJ: heatInput,
+        heatInputKJ: heatInputKJ
+      };
     }
-    animate();
-    // Initial update
-    updateSimulation();
+
+    // Compute torch coordinate (xs, ys, 0) at simulation time t
+    function getTorchPosition(t) {
+      const startX = 10.0; // mm
+      const travelDist = state.speed * t;
+      let xs = startX + travelDist;
+      let ys = 0;
+
+      // Stop moving when reaching near end of plate (L = 100 mm)
+      const maxTravelX = 90.0;
+      if (xs > maxTravelX) {
+        xs = maxTravelX;
+      }
+
+      const amp = state.trajectory.amplitude;
+      const freq = state.trajectory.frequency;
+
+      if (state.trajectory.type === 'zigzag') {
+        // Triangle wave
+        const p = 1.0 / Math.max(freq, 0.01);
+        const modT = (t % p) / p;
+        ys = amp * (4 * Math.abs(modT - 0.5) - 1);
+      } else if (state.trajectory.type === 'sine') {
+        ys = amp * Math.sin(2 * Math.PI * freq * t);
+      } else if (state.trajectory.type === 'circular') {
+        ys = amp * Math.sin(2 * Math.PI * freq * t);
+        xs += amp * 0.5 * Math.cos(2 * Math.PI * freq * t);
+      }
+
+      return { x: xs, y: ys, z: 0 };
+    }
+
+    // Transient temperature computation at point (x, y, z) at time t
+    function evaluateTemperatureAtPoint(x, y, z, t) {
+      if (t <= 0.001) return state.material.t0;
+
+      const alpha = getDiffusivity(); // mm^2/s
+      const Q = state.efficiency * state.voltage * state.current; // Watts = J/s
+      const rho = state.material.rho * 1e-9; // kg/mm^3
+      const cp = state.material.cp; // J/(kg*K)
+      const T0 = state.material.t0;
+      const H = state.joint.thickness; // plate thickness mm
+
+      const { a, b, cf, cr, ff, fr } = state.goldak;
+
+      // Temporal quadrature over tau in [0, t]
+      const nSteps = 22;
+      let sumT = 0;
+
+      for (let i = 0; i < nSteps; i++) {
+        // Use non-linear spacing clustered toward current time (tau -> t) for sharp gradients
+        const u = (i + 0.5) / nSteps;
+        const s = Math.pow(u, 2.5); // clustering near 1.0
+        const tau = t * (1.0 - s);
+        const dTau = t * 2.5 * Math.pow(u, 1.5) * (1.0 / nSteps);
+
+        const dt = t - tau;
+        if (dt < 0.002) continue;
+
+        // Position of torch at past time tau
+        const torchTau = getTorchPosition(tau);
+        const dx = x - torchTau.x;
+        const dy = y - torchTau.y;
+        const dz = z;
+
+        // Goldak direction selection: front (dx >= 0) or rear (dx < 0)
+        const isFront = (dx >= 0);
+        const cVal = isFront ? cf : cr;
+        const fVal = isFront ? ff : fr;
+
+        // Dispersive variance components
+        const sx2 = 4 * alpha * dt + (2 * cVal * cVal) / 3.0;
+        const sy2 = 4 * alpha * dt + (2 * a * a) / 3.0;
+        const sz2 = 4 * alpha * dt + (2 * b * b) / 3.0;
+
+        // Denominator
+        const denom = rho * cp * Math.pow(Math.PI, 1.5) * Math.sqrt(sx2 * sy2 * sz2);
+        if (denom <= 1e-12) continue;
+
+        // Spatial exponentials
+        const expX = Math.exp(- (dx * dx) / sx2);
+        const expY = Math.exp(- (dy * dy) / sy2);
+
+        // Z reflection at bottom boundary (z = H) for slab thickness
+        const expZ1 = Math.exp(- (dz * dz) / sz2);
+        const expZ2 = Math.exp(- (Math.pow(2 * H - dz, 2)) / sz2);
+        const expZ = expZ1 + expZ2;
+
+        // Convective boundary dissipation factor
+        const convFactor = Math.exp(- (2 * state.material.h * 1e-6 * dt) / (rho * cp * H));
+
+        const dDeltaT = (2.0 * fVal * Q / denom) * expX * expY * expZ * convFactor * dTau;
+        sumT += dDeltaT;
+      }
+
+      return T0 + sumT;
+    }
+
+    // Pre-calculates 2D top surface grids, cross section, and probe history for fast 60FPS scrubber
+    function runSimulation() {
+      const btnText = document.getElementById('btn-run-text');
+      const statusChip = document.getElementById('sim-status-chip');
+      if (btnText) btnText.textContent = 'Computing...';
+      if (statusChip) {
+        statusChip.textContent = 'Computing';
+        statusChip.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200';
+      }
+
+      // Plate geometry
+      const Nx = 45; // grid in X (0 to 100 mm)
+      const Ny = 23; // grid in Y (-25 to +25 mm)
+      state.snapshots = [];
+
+      const totalT = state.totalTime;
+      const numFrames = state.timeSteps;
+
+      // 1. Calculate time snapshots
+      for (let f = 0; f < numFrames; f++) {
+        const t = (f / (numFrames - 1)) * totalT;
+        const grid = new Float32Array(Nx * Ny);
+        let maxT = state.material.t0;
+
+        for (let j = 0; j < Ny; j++) {
+          const y = -25.0 + (j / (Ny - 1)) * 50.0;
+          for (let i = 0; i < Nx; i++) {
+            const x = (i / (Nx - 1)) * 100.0;
+            const temp = evaluateTemperatureAtPoint(x, y, 0.0, t);
+            grid[j * Nx + i] = temp;
+            if (temp > maxT) maxT = temp;
+          }
+        }
+
+        const torch = getTorchPosition(t);
+        state.snapshots.push({
+          time: t,
+          torch: torch,
+          grid: grid,
+          nx: Nx,
+          ny: Ny,
+          maxTemp: maxT
+        });
+      }
+
+      // 2. Calculate Probe Temperature History (80 time steps)
+      state.historyCurve = [];
+      const historySteps = 80;
+      let peakT = state.material.t0;
+      let timeToPeak = 0;
+
+      for (let i = 0; i < historySteps; i++) {
+        const t = (i / (historySteps - 1)) * totalT;
+        const temp = evaluateTemperatureAtPoint(state.probe.x, state.probe.y, state.probe.z, t);
+        state.historyCurve.push({ time: t, temp: temp });
+        if (temp > peakT) {
+          peakT = temp;
+          timeToPeak = t;
+        }
+      }
+
+      // 3. Calculate cooling rate t8/5 (time from 800°C down to 500°C)
+      let t800 = null;
+      let t500 = null;
+      let coolingFound = false;
+
+      // Search after peak
+      for (let i = 0; i < state.historyCurve.length; i++) {
+        const pt = state.historyCurve[i];
+        if (pt.time >= timeToPeak) {
+          if (t800 === null && pt.temp <= 800) {
+            t800 = pt.time;
+          }
+          if (t800 !== null && t500 === null && pt.temp <= 500) {
+            t500 = pt.time;
+            coolingFound = true;
+            break;
+          }
+        }
+      }
+
+      state.metallurgy = {
+        peakTemp: peakT,
+        timeToPeak: timeToPeak,
+        t85: (t800 !== null && t500 !== null) ? (t500 - t800) : null
+      };
+
+      if (btnText) btnText.textContent = 'Recompute';
+      if (statusChip) {
+        statusChip.textContent = 'Computed';
+        statusChip.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+      }
+
+      updateUIElements();
+      renderCurrentFrame();
+    }
+
+    // Maps temperature (°C) to RGBA color string and Three.js color
+    function getThermalColor(T, alpha = 1.0) {
+      const T0 = state.material.t0;
+      const Tm = state.material.tMelt;
+
+      let r, g, b;
+
+      if (T <= T0) {
+        // Cold slate gray
+        r = 71; g = 85; b = 105;
+      } else if (T < 400) {
+        // 25 - 400°C: slate gray to muted yellow-brown
+        const u = (T - T0) / (400 - T0);
+        r = Math.round(71 + u * (180 - 71));
+        g = Math.round(85 + u * (140 - 85));
+        b = Math.round(105 + u * (20 - 105));
+      } else if (T < 800) {
+        // 400 - 800°C: yellow-brown to bright amber/yellow
+        const u = (T - 400) / 400;
+        r = Math.round(180 + u * (234 - 180));
+        g = Math.round(140 + u * (179 - 140));
+        b = Math.round(20 + u * (8 - 20));
+      } else if (T < 1200) {
+        // 800 - 1200°C: yellow to fiery orange
+        const u = (T - 800) / 400;
+        r = Math.round(234 + u * (249 - 234));
+        g = Math.round(179 - u * (179 - 115));
+        b = Math.round(8 + u * (22 - 8));
+      } else if (T < Tm) {
+        // 1200 - Tm°C: orange to intense scarlet red
+        const u = (T - 1200) / (Tm - 1200);
+        r = Math.round(249 - u * (249 - 220));
+        g = Math.round(115 - u * (115 - 38));
+        b = Math.round(22 + u * (38 - 22));
+      } else {
+        // >= Tm: Molten pool glowing white-yellow to intense white
+        const u = Math.min((T - Tm) / 400, 1.0);
+        r = Math.round(220 + u * (255 - 220));
+        g = Math.round(38 + u * (255 - 38));
+        b = Math.round(38 + u * (255 - 38));
+      }
+
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function updateGoldakSVG() {
+      const svg = document.getElementById('goldak-svg-schematic');
+      if (!svg) return;
+
+      const { a, b, cf, cr, ff, fr } = state.goldak;
+      const centerX = 160;
+      const centerY = 50;
+      const scale = 5.8; // px per mm
+
+      const rX_front = cf * scale;
+      const rX_rear = cr * scale;
+      const rY = a * scale;
+
+      // Path for front semi-ellipse
+      const frontPath = `M ${centerX} ${centerY - rY} A ${rX_front} ${rY} 0 0 1 ${centerX} ${centerY + rY} Z`;
+      // Path for rear semi-ellipse
+      const rearPath = `M ${centerX} ${centerY - rY} A ${rX_rear} ${rY} 0 0 0 ${centerX} ${centerY + rY} Z`;
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+          </marker>
+          <linearGradient id="rearGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ea580c" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#dc2626" stop-opacity="0.75"/>
+          </linearGradient>
+          <linearGradient id="frontGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#dc2626" stop-opacity="0.75"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.25"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Centerline axis -->
+        <line x1="20" y1="${centerY}" x2="280" y2="${centerY}" stroke="#cbd5e1" stroke-dasharray="3,3" stroke-width="1"/>
+        <line x1="${centerX}" y1="10" x2="${centerX}" y2="90" stroke="#cbd5e1" stroke-dasharray="3,3" stroke-width="1"/>
+
+        <!-- Rear Semi-Ellipsoid -->
+        <path d="${rearPath}" fill="url(#rearGrad)" stroke="#ea580c" stroke-width="1.5"/>
+        <!-- Front Semi-Ellipsoid -->
+        <path d="${frontPath}" fill="url(#frontGrad)" stroke="#f59e0b" stroke-width="1.5"/>
+
+        <!-- Center source dot -->
+        <circle cx="${centerX}" cy="${centerY}" r="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+
+        <!-- Dimensions arrows & labels -->
+        <!-- Front length cf -->
+        <line x1="${centerX}" y1="80" x2="${centerX + rX_front}" y2="80" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+        <text x="${centerX + rX_front / 2}" y="92" font-size="9" fill="#475569" text-anchor="middle" font-family="monospace">c_f=${cf}</text>
+
+        <!-- Rear length cr -->
+        <line x1="${centerX}" y1="80" x2="${centerX - rX_rear}" y2="80" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+        <text x="${centerX - rX_rear / 2}" y="92" font-size="9" fill="#475569" text-anchor="middle" font-family="monospace">c_r=${cr}</text>
+
+        <!-- Semi-width a -->
+        <line x1="255" y1="${centerY}" x2="255" y2="${centerY - rY}" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+        <text x="268" y="${centerY - rY / 2 + 3}" font-size="9" fill="#475569" font-family="monospace">a=${a}</text>
+
+        <!-- Energy fraction badges -->
+        <text x="${centerX - rX_rear * 0.45}" y="${centerY - 8}" font-size="8.5" font-weight="600" fill="#c2410c" text-anchor="middle">fr=${fr.toFixed(2)}</text>
+        <text x="${centerX + rX_front * 0.45}" y="${centerY - 8}" font-size="8.5" font-weight="600" fill="#b45309" text-anchor="middle">ff=${ff.toFixed(2)}</text>
+      `;
+    }
+
+    let threeState = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      controls: null,
+      plateMesh: null,
+      torchGroup: null,
+      arcLight: null,
+      plasmaGlow: null,
+      pathLine: null,
+      probeMesh: null,
+      textureCanvas: null,
+      textureCtx: null,
+      surfaceTexture: null
+    };
+
+    function initThreeJS() {
+      const container = document.getElementById('threejs-canvas-container');
+      if (!container) return;
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      // 1. Scene
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a); // Deep slate background
+
+      // 2. Camera
+      const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+      camera.position.set(50, -85, 75);
+      camera.up.set(0, 0, 1);
+
+      // 3. Renderer
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      // 4. Orbit Controls
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(50, 0, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1; // don't go below floor
+
+      // 5. Lighting
+      const ambLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      dirLight.position.set(50, -100, 100);
+      scene.add(dirLight);
+
+      // Arc Point Light
+      const arcLight = new THREE.PointLight(0xffedd5, 2.5, 35);
+      scene.add(arcLight);
+
+      // 6. Plate Workpiece with Dynamic Thermal Canvas Texture
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 256;
+      texCanvas.height = 128;
+      const texCtx = texCanvas.getContext('2d');
+      const surfaceTexture = new THREE.CanvasTexture(texCanvas);
+      surfaceTexture.minFilter = THREE.LinearFilter;
+
+      // Plate geometry: Length=100 (x: 0..100), Width=50 (y: -25..25), Thick=8 (z: -8..0)
+      const plateThick = state.joint.thickness;
+      const plateGeo = new THREE.BoxGeometry(100, 50, plateThick);
+      
+      // Multi-material box: top surface has the thermal map
+      const sideMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6, metalness: 0.4 });
+      const topMat = new THREE.MeshStandardMaterial({ map: surfaceTexture, roughness: 0.4, metalness: 0.2 });
+      
+      const materials = [sideMat, sideMat, sideMat, sideMat, topMat, sideMat];
+      const plateMesh = new THREE.Mesh(plateGeo, materials);
+      plateMesh.position.set(50, 0, -plateThick / 2);
+      scene.add(plateMesh);
+
+      // Wireframe helper
+      const wireframeGeo = new THREE.EdgesGeometry(plateGeo);
+      const wireframeMat = new THREE.LineBasicMaterial({ color: 0x64748b, linewidth: 1 });
+      const wireframeMesh = new THREE.LineSegments(wireframeGeo, wireframeMat);
+      plateMesh.add(wireframeMesh);
+      threeState.wireframeMesh = wireframeMesh;
+      wireframeMesh.visible = false;
+
+      // Ground plane grid
+      const grid = new THREE.GridHelper(180, 18, 0x475569, 0x1e293b);
+      grid.rotation.x = Math.PI / 2;
+      grid.position.set(50, 0, -plateThick - 0.1);
+      scene.add(grid);
+
+      // 7. 3D Welding Torch Assembly
+      const torchGroup = new THREE.Group();
+
+      // Brass Nozzle
+      const nozzleGeo = new THREE.CylinderGeometry(2.0, 3.2, 14, 16);
+      const nozzleMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8, roughness: 0.3 });
+      const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
+      nozzle.rotation.x = Math.PI / 2;
+      nozzle.position.z = 8;
+      torchGroup.add(nozzle);
+
+      // Tungsten Electrode tip
+      const tipGeo = new THREE.CylinderGeometry(0.5, 0.5, 6, 8);
+      const tipMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.1 });
+      const tip = new THREE.Mesh(tipGeo, tipMat);
+      tip.rotation.x = Math.PI / 2;
+      tip.position.z = 1.5;
+      torchGroup.add(tip);
+
+      // Arc plasma glow sphere
+      const glowGeo = new THREE.SphereGeometry(1.4, 16, 16);
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.85 });
+      const plasmaGlow = new THREE.Mesh(glowGeo, glowMat);
+      plasmaGlow.position.z = 0.5;
+      torchGroup.add(plasmaGlow);
+
+      scene.add(torchGroup);
+
+      // 8. Probe Pin 3D Mesh
+      const probeGroup = new THREE.Group();
+      const pinStemGeo = new THREE.CylinderGeometry(0.3, 0.3, 10, 8);
+      const pinStemMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+      const pinStem = new THREE.Mesh(pinStemGeo, pinStemMat);
+      pinStem.rotation.x = Math.PI / 2;
+      pinStem.position.z = 5;
+      probeGroup.add(pinStem);
+
+      const pinHeadGeo = new THREE.SphereGeometry(1.2, 12, 12);
+      const pinHeadMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.3 });
+      const pinHead = new THREE.Mesh(pinHeadGeo, pinHeadMat);
+      pinHead.position.z = 10;
+      probeGroup.add(pinHead);
+
+      scene.add(probeGroup);
+
+      // Save references
+      threeState = {
+        scene, camera, renderer, controls,
+        plateMesh, torchGroup, arcLight, plasmaGlow,
+        probeMesh: probeGroup,
+        textureCanvas: texCanvas,
+        textureCtx: texCtx,
+        surfaceTexture,
+        wireframeMesh
+      };
+
+      // Responsive resize
+      window.addEventListener('resize', onThreeResize);
+    }
+
+    function onThreeResize() {
+      const container = document.getElementById('threejs-canvas-container');
+      if (!container || !threeState.renderer || !threeState.camera) return;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      threeState.camera.aspect = w / h;
+      threeState.camera.updateProjectionMatrix();
+      threeState.renderer.setSize(w, h);
+    }
+
+    function updateThreeJSFrame(currentT) {
+      if (!threeState.renderer) return;
+
+      const torchPos = getTorchPosition(currentT);
+
+      // 1. Move Torch
+      if (threeState.torchGroup) {
+        threeState.torchGroup.position.set(torchPos.x, torchPos.y, 0);
+        threeState.arcLight.position.set(torchPos.x, torchPos.y, 2);
+        
+        // Plasma flickering effect
+        const flicker = 0.8 + Math.random() * 0.4;
+        threeState.plasmaGlow.scale.set(flicker, flicker, flicker);
+        threeState.arcLight.intensity = 2.0 * flicker;
+      }
+
+      // 2. Move Probe Pin
+      if (threeState.probeMesh) {
+        threeState.probeMesh.position.set(state.probe.x, state.probe.y, 0);
+      }
+
+      // 3. Update Plate Thermal Texture
+      if (threeState.textureCtx && state.snapshots.length > 0) {
+        const ctx = threeState.textureCtx;
+        const cvs = threeState.textureCanvas;
+        const w = cvs.width;
+        const h = cvs.height;
+
+        // Find nearest snapshot
+        const snap = getNearestSnapshot(currentT);
+        if (snap) {
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(0, 0, w, h);
+
+          const imgData = ctx.createImageData(w, h);
+          const data = imgData.data;
+
+          const nx = snap.nx;
+          const ny = snap.ny;
+
+          // Bilinear sampling across canvas
+          for (let py = 0; py < h; py++) {
+            const gy = (py / (h - 1)) * (ny - 1);
+            const j0 = Math.floor(gy);
+            const j1 = Math.min(j0 + 1, ny - 1);
+            const ty = gy - j0;
+
+            for (let px = 0; px < w; px++) {
+              const gx = (px / (w - 1)) * (nx - 1);
+              const i0 = Math.floor(gx);
+              const i1 = Math.min(i0 + 1, nx - 1);
+              const tx = gx - i0;
+
+              const t00 = snap.grid[j0 * nx + i0];
+              const t10 = snap.grid[j0 * nx + i1];
+              const t01 = snap.grid[j1 * nx + i0];
+              const t11 = snap.grid[j1 * nx + i1];
+
+              const temp = (1 - tx) * (1 - ty) * t00 + tx * (1 - ty) * t10 + (1 - tx) * ty * t01 + tx * ty * t11;
+
+              // Color conversion
+              const colorStr = getThermalColor(temp);
+              // Parse rgba
+              const rgb = colorStr.match(/\d+/g);
+              const idx = (py * w + px) * 4;
+              data[idx] = parseInt(rgb[0]);
+              data[idx + 1] = parseInt(rgb[1]);
+              data[idx + 2] = parseInt(rgb[2]);
+              data[idx + 3] = 255;
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          threeState.surfaceTexture.needsUpdate = true;
+        }
+      }
+
+      // Render Three.js scene
+      threeState.controls.update();
+      threeState.renderer.render(threeState.scene, threeState.camera);
+    }
+
+    // Helper: retrieve interpolated snapshot for current time
+    function getNearestSnapshot(t) {
+      if (!state.snapshots || state.snapshots.length === 0) return null;
+      const frac = Math.max(0, Math.min(t / state.totalTime, 1.0));
+      const idx = Math.min(Math.floor(frac * (state.snapshots.length - 1)), state.snapshots.length - 1);
+      return state.snapshots[idx];
+    }
+
+    function renderTopView(currentT) {
+      const canvas = document.getElementById('canvas-top-view');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const width = 640;
+      const height = 320;
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+
+      // Margins for drafting coordinate axes
+      const padL = 40;
+      const padR = 25;
+      const padT = 20;
+      const padB = 35;
+
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+
+      // Coordinate transforms: Plate X in [0, 100], Y in [-25, 25]
+      function toCanvas(x, y) {
+        return {
+          cx: padL + (x / 100.0) * plotW,
+          cy: padT + ((25.0 - y) / 50.0) * plotH
+        };
+      }
+
+      const snap = getNearestSnapshot(currentT);
+      if (snap) {
+        // Draw interpolated thermal pixels on plate interior
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = snap.nx;
+        offCanvas.height = snap.ny;
+        const offCtx = offCanvas.getContext('2d');
+        const imgData = offCtx.createImageData(snap.nx, snap.ny);
+
+        for (let j = 0; j < snap.ny; j++) {
+          // Flip Y for screen canvas orientation
+          const srcJ = snap.ny - 1 - j;
+          for (let i = 0; i < snap.nx; i++) {
+            const temp = snap.grid[srcJ * snap.nx + i];
+            const rgb = getThermalColor(temp).match(/\d+/g);
+            const idx = (j * snap.nx + i) * 4;
+            imgData.data[idx] = parseInt(rgb[0]);
+            imgData.data[idx + 1] = parseInt(rgb[1]);
+            imgData.data[idx + 2] = parseInt(rgb[2]);
+            imgData.data[idx + 3] = 255;
+          }
+        }
+        offCtx.putImageData(imgData, 0, 0);
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(offCanvas, padL, padT, plotW, plotH);
+      }
+
+      // Plate border
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(padL, padT, plotW, plotH);
+
+      // Centerline seam
+      ctx.strokeStyle = '#64748b';
+      ctx.setLineDash([4, 4]);
+      const pCenterStart = toCanvas(0, 0);
+      const pCenterEnd = toCanvas(100, 0);
+      ctx.beginPath();
+      ctx.moveTo(pCenterStart.cx, pCenterStart.cy);
+      ctx.lineTo(pCenterEnd.cx, pCenterEnd.cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Torch Trajectory path line
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const nPathSteps = 80;
+      for (let i = 0; i <= nPathSteps; i++) {
+        const tau = (i / nPathSteps) * state.totalTime;
+        const pos = getTorchPosition(tau);
+        const cp = toCanvas(pos.x, pos.y);
+        if (i === 0) ctx.moveTo(cp.cx, cp.cy);
+        else ctx.lineTo(cp.cx, cp.cy);
+      }
+      ctx.stroke();
+
+      // Current Torch location
+      const torch = getTorchPosition(currentT);
+      const cTorch = toCanvas(torch.x, torch.y);
+
+      // Arc glow ring
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+      ctx.beginPath();
+      ctx.arc(cTorch.cx, cTorch.cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Torch crosshair dot
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cTorch.cx, cTorch.cy, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Probe marker
+      const cProbe = toCanvas(state.probe.x, state.probe.y);
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(cProbe.cx, cProbe.cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Drafting Axis Rulers & Tick Marks
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+
+      // X-ticks (0, 20, 40, 60, 80, 100 mm)
+      for (let x = 0; x <= 100; x += 20) {
+        const pt = toCanvas(x, -25);
+        ctx.fillText(`${x}`, pt.cx, pt.cy + 15);
+        ctx.fillRect(pt.cx - 0.5, pt.cy, 1, 4);
+      }
+      ctx.fillText('X Length (mm)', padL + plotW / 2, height - 6);
+
+      // Y-ticks (-25, 0, +25 mm)
+      ctx.textAlign = 'right';
+      for (let y = -20; y <= 20; y += 20) {
+        const pt = toCanvas(0, y);
+        ctx.fillText(`${y}`, pt.cx - 8, pt.cy + 3);
+        ctx.fillRect(pt.cx - 4, pt.cy - 0.5, 4, 1);
+      }
+      ctx.save();
+      ctx.translate(12, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('Y Width (mm)', 0, 0);
+      ctx.restore();
+    }
+
+    function renderCrossSection(currentT) {
+      const canvas = document.getElementById('canvas-cross-view');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const width = 640;
+      const height = 320;
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+
+      const padL = 50;
+      const padR = 40;
+      const padT = 30;
+      const padB = 40;
+
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      // Slice X value
+      const sliceX = state.sliceX;
+      const thick = state.joint.thickness; // mm (Z from 0 down to thick)
+      const Tm = state.material.tMelt;
+
+      // Coordinate mapping: Y in [-20, +20] mm, Z in [0, thick] mm
+      const ySpan = 20.0;
+      function toCross(y, z) {
+        return {
+          cx: padL + ((y + ySpan) / (2 * ySpan)) * plotW,
+          cy: padT + (z / thick) * plotH
+        };
+      }
+
+      // Sample a 2D grid in Y-Z for this slice X at time currentT
+      const nY = 41;
+      const nZ = 21;
+      let maxDepthMelt = 0;
+      let maxWidthMelt = 0;
+
+      const crossGrid = [];
+      for (let j = 0; j < nZ; j++) {
+        const z = (j / (nZ - 1)) * thick;
+        crossGrid[j] = [];
+        for (let i = 0; i < nY; i++) {
+          const y = -ySpan + (i / (nY - 1)) * (2 * ySpan);
+          const temp = evaluateTemperatureAtPoint(sliceX, y, z, currentT);
+          crossGrid[j][i] = temp;
+
+          if (temp >= Tm) {
+            if (z > maxDepthMelt) maxDepthMelt = z;
+            const w = Math.abs(y) * 2;
+            if (w > maxWidthMelt) maxWidthMelt = w;
+          }
+        }
+      }
+
+      // Draw thermal gradient cells
+      const cellW = plotW / (nY - 1);
+      const cellH = plotH / (nZ - 1);
+
+      for (let j = 0; j < nZ - 1; j++) {
+        for (let i = 0; i < nY - 1; i++) {
+          const avgT = (crossGrid[j][i] + crossGrid[j][i+1] + crossGrid[j+1][i] + crossGrid[j+1][i+1]) / 4;
+          const cp = toCross(-ySpan + (i / (nY - 1)) * (2 * ySpan), (j / (nZ - 1)) * thick);
+          ctx.fillStyle = getThermalColor(avgT);
+          ctx.fillRect(cp.cx, cp.cy, cellW + 0.5, cellH + 0.5);
+        }
+      }
+
+      // Draw Joint Groove Geometry Outline
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+
+      const gap = state.joint.rootGap;
+      const face = state.joint.rootFace;
+      const angRad = (state.joint.angle * Math.PI) / 180;
+      const bevelDepth = thick - face;
+      const bevelWidth = Math.tan(angRad / 2) * bevelDepth;
+
+      // Left plate groove contour
+      const pL_top_outer = toCross(-ySpan, 0);
+      const pL_top_groove = toCross(-(gap / 2 + bevelWidth), 0);
+      const pL_root_top = toCross(-gap / 2, bevelDepth);
+      const pL_root_bot = toCross(-gap / 2, thick);
+      const pL_bot_outer = toCross(-ySpan, thick);
+
+      ctx.beginPath();
+      ctx.moveTo(pL_top_outer.cx, pL_top_outer.cy);
+      ctx.lineTo(pL_top_groove.cx, pL_top_groove.cy);
+      ctx.lineTo(pL_root_top.cx, pL_root_top.cy);
+      ctx.lineTo(pL_root_bot.cx, pL_root_bot.cy);
+      ctx.lineTo(pL_bot_outer.cx, pL_bot_outer.cy);
+      ctx.stroke();
+
+      // Right plate groove contour
+      const pR_top_outer = toCross(ySpan, 0);
+      const pR_top_groove = toCross(gap / 2 + bevelWidth, 0);
+      const pR_root_top = toCross(gap / 2, bevelDepth);
+      const pR_root_bot = toCross(gap / 2, thick);
+      const pR_bot_outer = toCross(ySpan, thick);
+
+      ctx.beginPath();
+      ctx.moveTo(pR_top_outer.cx, pR_top_outer.cy);
+      ctx.lineTo(pR_top_groove.cx, pR_top_groove.cy);
+      ctx.lineTo(pR_root_top.cx, pR_root_top.cy);
+      ctx.lineTo(pR_root_bot.cx, pR_root_bot.cy);
+      ctx.lineTo(pR_bot_outer.cx, pR_bot_outer.cy);
+      ctx.stroke();
+
+      // Melt Pool Isotherm Boundary (T = Tmelt)
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([3, 3]);
+
+      if (maxWidthMelt > 0.1 && maxDepthMelt > 0.1) {
+        // Draw smoothed melt pool boundary
+        ctx.beginPath();
+        const meltSemiW = maxWidthMelt / 2;
+        const pMeltL = toCross(-meltSemiW, 0);
+        const pMeltR = toCross(meltSemiW, 0);
+        const pMeltB = toCross(0, maxDepthMelt);
+
+        ctx.moveTo(pMeltL.cx, pMeltL.cy);
+        ctx.quadraticCurveTo(pMeltB.cx, pMeltB.cy, pMeltR.cx, pMeltR.cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Dimension Annotation: Melt Depth dm
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        const arrowX = toCross(meltSemiW + 4, 0).cx;
+        const pZ0 = toCross(0, 0).cy;
+        const pZB = toCross(0, maxDepthMelt).cy;
+
+        ctx.beginPath();
+        ctx.moveTo(arrowX, pZ0);
+        ctx.lineTo(arrowX, pZB);
+        ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`dm = ${maxDepthMelt.toFixed(1)}mm`, arrowX + 5, (pZ0 + pZB) / 2 + 3);
+      } else {
+        ctx.setLineDash([]);
+      }
+
+      // Update UI readouts
+      const pct = (maxDepthMelt / thick) * 100;
+      const elDepth = document.getElementById('val-melt-depth');
+      const elWidth = document.getElementById('val-melt-width');
+      const elPct = document.getElementById('val-penetration-pct');
+      const elVerdict = document.getElementById('val-penetration-verdict');
+
+      if (elDepth) elDepth.textContent = `${maxDepthMelt.toFixed(1)} mm`;
+      if (elWidth) elWidth.textContent = `${maxWidthMelt.toFixed(1)} mm`;
+      if (elPct) elPct.textContent = `${pct.toFixed(1)}%`;
+
+      if (elVerdict) {
+        if (pct >= 100) {
+          elVerdict.textContent = '⚠ Full Thickness (Burn-Through)';
+          elVerdict.className = 'font-semibold text-amber-600';
+        } else if (pct > 70) {
+          elVerdict.textContent = 'Complete Root Penetration';
+          elVerdict.className = 'font-semibold text-emerald-600';
+        } else if (pct > 25) {
+          elVerdict.textContent = 'Partial Joint Penetration';
+          elVerdict.className = 'font-semibold text-blue-600';
+        } else {
+          elVerdict.textContent = 'Lack of Fusion / Shallow';
+          elVerdict.className = 'font-semibold text-slate-600';
+        }
+      }
+
+      // Axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+
+      // Y width ticks
+      for (let y = -15; y <= 15; y += 10) {
+        const pt = toCross(y, thick);
+        ctx.fillText(`${y}`, pt.cx, pt.cy + 15);
+      }
+      ctx.fillText('Transverse Width Y (mm)', padL + plotW / 2, height - 6);
+
+      // Z depth ticks
+      ctx.textAlign = 'right';
+      for (let z = 0; z <= thick; z += Math.max(2, Math.floor(thick / 4))) {
+        const pt = toCross(-ySpan, z);
+        ctx.fillText(`${z}`, pt.cx - 8, pt.cy + 3);
+      }
+      ctx.save();
+      ctx.translate(14, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('Depth Z (mm)', 0, 0);
+      ctx.restore();
+    }
+
+    function renderTempHistory(currentT) {
+      const canvas = document.getElementById('canvas-history-graph');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const width = canvas.parentElement.clientWidth || 640;
+      const height = 280;
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const padL = 50;
+      const padR = 25;
+      const padT = 20;
+      const padB = 35;
+
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      const maxPlotT = Math.max(1800, (state.metallurgy ? state.metallurgy.peakTemp * 1.15 : 1600));
+      const totalTime = state.totalTime;
+
+      function toPlot(t, temp) {
+        return {
+          cx: padL + (t / totalTime) * plotW,
+          cy: padT + ((maxPlotT - temp) / maxPlotT) * plotH
+        };
+      }
+
+      // Horizontal reference grid lines
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.lineWidth = 1;
+      const refTemps = [500, 800, state.material.tMelt];
+
+      refTemps.forEach(temp => {
+        const p = toPlot(0, temp);
+        ctx.beginPath();
+        ctx.moveTo(padL, p.cy);
+        ctx.lineTo(padL + plotW, p.cy);
+        ctx.stroke();
+
+        ctx.fillStyle = (temp === state.material.tMelt) ? '#dc2626' : (temp === 800 ? '#ea580c' : '#2563eb');
+        ctx.font = '9px JetBrains Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${temp}°C ${temp === state.material.tMelt ? '(Tmelt)' : ''}`, padL + plotW - 65, p.cy - 4);
+      });
+
+      // Axis lines
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+
+      // Plot Temperature History Curve
+      if (state.historyCurve && state.historyCurve.length > 1) {
+        // Curve gradient fill
+        const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+        grad.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
+        grad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+        ctx.beginPath();
+        state.historyCurve.forEach((pt, idx) => {
+          const cp = toPlot(pt.time, pt.temp);
+          if (idx === 0) ctx.moveTo(cp.cx, cp.cy);
+          else ctx.lineTo(cp.cx, cp.cy);
+        });
+        ctx.lineTo(padL + plotW, padT + plotH);
+        ctx.lineTo(padL, padT + plotH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Stroke curve
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        state.historyCurve.forEach((pt, idx) => {
+          const cp = toPlot(pt.time, pt.temp);
+          if (idx === 0) ctx.moveTo(cp.cx, cp.cy);
+          else ctx.lineTo(cp.cx, cp.cy);
+        });
+        ctx.stroke();
+      }
+
+      // Current Time Vertical Scrubber Indicator
+      const curP = toPlot(currentT, 0);
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(curP.cx, padT);
+      ctx.lineTo(curP.cx, padT + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Current probe temperature dot
+      const curProbeTemp = evaluateTemperatureAtPoint(state.probe.x, state.probe.y, state.probe.z, currentT);
+      const dotP = toPlot(currentT, curProbeTemp);
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(dotP.cx, dotP.cy, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label current temp
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${Math.round(curProbeTemp)}°C`, dotP.cx + 8, dotP.cy + 3);
+
+      // Axis Ticks & Numbers
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+
+      // Time X ticks
+      for (let t = 0; t <= totalTime; t += 4) {
+        const pt = toPlot(t, 0);
+        ctx.fillText(`${t}s`, pt.cx, pt.cy + 15);
+      }
+      ctx.fillText('Simulation Time t (s)', padL + plotW / 2, height - 6);
+
+      // Temperature Y ticks
+      ctx.textAlign = 'right';
+      for (let temp = 0; temp <= maxPlotT; temp += 400) {
+        const pt = toPlot(0, temp);
+        ctx.fillText(`${temp}`, pt.cx - 8, pt.cy + 3);
+      }
+      ctx.save();
+      ctx.translate(14, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('Temperature T (°C)', 0, 0);
+      ctx.restore();
+
+      // Update metallurgical cards
+      if (state.metallurgy) {
+        const elPeak = document.getElementById('metric-peak-temp');
+        const elTimePeak = document.getElementById('metric-time-peak');
+        const elT85 = document.getElementById('metric-t85');
+
+        if (elPeak) elPeak.textContent = `${Math.round(state.metallurgy.peakTemp)} °C`;
+        if (elTimePeak) elTimePeak.textContent = `${state.metallurgy.timeToPeak.toFixed(1)} s`;
+        if (elT85) {
+          if (state.metallurgy.t85 !== null) {
+            elT85.textContent = `${state.metallurgy.t85.toFixed(1)} s`;
+            elT85.className = 'font-mono font-semibold text-emerald-600';
+          } else {
+            elT85.textContent = 'N/A (Peak < 800°C)';
+            elT85.className = 'font-mono font-semibold text-slate-600';
+          }
+        }
+      }
+    }
+
+    function updateAssessmentTab() {
+      const thick = state.joint.thickness;
+      const Q = state.efficiency * state.voltage * state.current;
+      const v = state.speed;
+      const H = (Q / v) / 1000; // kJ/mm
+
+      // Estimate max melt pool depth across simulation
+      let maxDepth = state.goldak.b * (Q / 3000) * (5.0 / v) * 0.75;
+      maxDepth = Math.max(1.2, Math.min(maxDepth, thick * 1.35));
+
+      const maxWidth = state.goldak.a * 2 * Math.sqrt(Q / 3000) * 1.1;
+      const poolLength = (state.goldak.cf + state.goldak.cr) * Math.sqrt(Q / 3000) * 0.9;
+      const pct = (maxDepth / thick) * 100;
+
+      // Update Scorecard Values
+      const elArc = document.getElementById('ass-arc');
+      const elEff = document.getElementById('ass-eff');
+      const elHeat = document.getElementById('ass-heat');
+      const elSpeed = document.getElementById('ass-speed');
+
+      if (elArc) elArc.textContent = `${(state.voltage * state.current / 1000).toFixed(2)} kW`;
+      if (elEff) elEff.textContent = `${(Q / 1000).toFixed(2)} kW`;
+      if (elHeat) elHeat.textContent = `${H.toFixed(2)} kJ/mm`;
+      if (elSpeed) elSpeed.textContent = `${v.toFixed(1)} mm/s`;
+
+      const elLen = document.getElementById('ass-length');
+      const elW = document.getElementById('ass-width');
+      const elD = document.getElementById('ass-depth');
+      const elPct = document.getElementById('ass-pct');
+
+      if (elLen) elLen.textContent = `${poolLength.toFixed(1)} mm`;
+      if (elW) elW.textContent = `${maxWidth.toFixed(1)} mm`;
+      if (elD) elD.textContent = `${maxDepth.toFixed(1)} mm`;
+      if (elPct) elPct.textContent = `${pct.toFixed(1)}%`;
+
+      const elMaxTemp = document.getElementById('ass-max-temp');
+      const elT85 = document.getElementById('ass-t85');
+      const elHaz = document.getElementById('ass-haz');
+      const elTmelt = document.getElementById('ass-tmelt');
+
+      if (elMaxTemp) elMaxTemp.textContent = `${Math.round(state.material.tMelt + 400)} °C`;
+      if (elT85 && state.metallurgy) {
+        elT85.textContent = state.metallurgy.t85 !== null ? `${state.metallurgy.t85.toFixed(1)} s` : 'N/A';
+      }
+      if (elHaz) elHaz.textContent = `~ ${(maxWidth * 0.45).toFixed(1)} mm`;
+      if (elTmelt) elTmelt.textContent = `${state.material.tMelt} °C`;
+
+      // Full-Thickness Melting / Blow-Through Warning Check
+      const bannerBurn = document.getElementById('banner-burn-through');
+      const bannerSound = document.getElementById('banner-sound-weld');
+      const badge = document.getElementById('assessment-badge');
+      const burnD = document.getElementById('burn-depth');
+      const burnT = document.getElementById('burn-thick');
+
+      if (pct >= 100) {
+        if (bannerBurn) bannerBurn.classList.remove('hidden');
+        if (bannerSound) bannerSound.classList.add('hidden');
+        if (burnD) burnD.textContent = `${maxDepth.toFixed(1)} mm`;
+        if (burnT) burnT.textContent = `${thick.toFixed(1)} mm`;
+        if (badge) {
+          badge.textContent = 'Burn-Through Risk';
+          badge.className = 'inline-flex items-center px-3 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300';
+        }
+      } else {
+        if (bannerBurn) bannerBurn.classList.add('hidden');
+        if (bannerSound) bannerSound.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = pct > 65 ? 'Sound Root Penetration' : 'Partial Joint Fusion';
+          badge.className = 'inline-flex items-center px-3 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        }
+      }
+    }
+
+    function renderCurrentFrame() {
+      const t = state.currentTime;
+
+      // Update header live badges
+      const m = computeWeldingMetrics();
+      const hArc = document.getElementById('hdr-arc-power');
+      const hEff = document.getElementById('hdr-eff-power');
+      const hHeat = document.getElementById('hdr-heat-input');
+      if (hArc) hArc.textContent = `${m.arcPowerKW.toFixed(2)} kW`;
+      if (hEff) hEff.textContent = `${m.effPowerKW.toFixed(2)} kW`;
+      if (hHeat) hHeat.textContent = `${m.heatInputKJ.toFixed(2)} kJ/mm`;
+
+      // Update Scrubber label
+      const timeLabel = document.getElementById('txt-current-time');
+      if (timeLabel) timeLabel.textContent = `${t.toFixed(2)} s`;
+      const scrubber = document.getElementById('timeline-scrubber');
+      if (scrubber) scrubber.value = t;
+
+      // Update 3D HUD
+      const torch = getTorchPosition(t);
+      const hudTorch = document.getElementById('hud-torch-pos');
+      if (hudTorch) hudTorch.textContent = `X: ${torch.x.toFixed(1)}, Y: ${torch.y.toFixed(1)}, Z: 0.0 mm`;
+
+      const snap = getNearestSnapshot(t);
+      if (snap) {
+        const hudPeak = document.getElementById('hud-peak-temp');
+        if (hudPeak) hudPeak.textContent = `${Math.round(snap.maxTemp)} °C`;
+        const hudStatus = document.getElementById('hud-melt-status');
+        if (hudStatus) {
+          hudStatus.textContent = snap.maxTemp >= state.material.tMelt ? 'Molten Pool Active' : 'Cooling Solid';
+          hudStatus.className = snap.maxTemp >= state.material.tMelt ? 'text-amber-400 font-semibold' : 'text-slate-400';
+        }
+      }
+
+      // Render Active View
+      if (state.activeTab === 'tab-3d') {
+        updateThreeJSFrame(t);
+      } else if (state.activeTab === 'tab-top') {
+        renderTopView(t);
+      } else if (state.activeTab === 'tab-cross') {
+        renderCrossSection(t);
+      } else if (state.activeTab === 'tab-history') {
+        renderTempHistory(t);
+      } else if (state.activeTab === 'tab-assessment') {
+        updateAssessmentTab();
+      }
+    }
+
+    // Playback Animation Loop
+    function animationTick(timestamp) {
+      if (!state.isPlaying) return;
+
+      if (!state.lastFrameTimestamp) state.lastFrameTimestamp = timestamp;
+      const deltaSec = (timestamp - state.lastFrameTimestamp) / 1000;
+      state.lastFrameTimestamp = timestamp;
+
+      state.currentTime += deltaSec * state.playbackSpeed;
+
+      if (state.currentTime >= state.totalTime) {
+        state.currentTime = state.totalTime;
+        setPlaying(false);
+      }
+
+      renderCurrentFrame();
+
+      if (state.isPlaying) {
+        state.animFrameId = requestAnimationFrame(animationTick);
+      }
+    }
+
+    function setPlaying(play) {
+      state.isPlaying = play;
+      const icon = document.getElementById('icon-play-pause');
+      if (icon) {
+        icon.setAttribute('icon', play ? 'solar:pause-linear' : 'solar:play-linear');
+      }
+
+      if (play) {
+        if (state.currentTime >= state.totalTime) {
+          state.currentTime = 0;
+        }
+        state.lastFrameTimestamp = null;
+        state.animFrameId = requestAnimationFrame(animationTick);
+      } else {
+        if (state.animFrameId) {
+          cancelAnimationFrame(state.animFrameId);
+          state.animFrameId = null;
+        }
+      }
+    }
+
+    function updateUIElements() {
+      // Welding values
+      document.getElementById('val-current').textContent = `${state.current} A`;
+      document.getElementById('val-voltage').textContent = `${state.voltage} V`;
+      document.getElementById('val-efficiency').textContent = state.efficiency.toFixed(2);
+      document.getElementById('val-speed').textContent = `${state.speed.toFixed(1)} mm/s`;
+
+      const m = computeWeldingMetrics();
+      document.getElementById('calc-arc-power').textContent = `${m.arcPowerKW.toFixed(2)} kW`;
+      document.getElementById('calc-eff-power').textContent = `${m.effPowerKW.toFixed(2)} kW`;
+      document.getElementById('calc-heat-input').textContent = `${m.heatInputKJ.toFixed(2)} kJ/mm`;
+
+      // Goldak values
+      document.getElementById('val-goldak-a').textContent = `${state.goldak.a.toFixed(1)} mm`;
+      document.getElementById('val-goldak-b').textContent = `${state.goldak.b.toFixed(1)} mm`;
+      document.getElementById('val-goldak-cf').textContent = `${state.goldak.cf.toFixed(1)} mm`;
+      document.getElementById('val-goldak-cr').textContent = `${state.goldak.cr.toFixed(1)} mm`;
+      document.getElementById('val-goldak-fractions').textContent = `${state.goldak.ff.toFixed(2)} / ${state.goldak.fr.toFixed(2)}`;
+
+      // Joint values
+      document.getElementById('val-joint-thick').textContent = `${state.joint.thickness.toFixed(1)} mm`;
+      document.getElementById('val-joint-angle').textContent = `${state.joint.angle}°`;
+      document.getElementById('val-joint-gap').textContent = `${state.joint.rootGap.toFixed(1)} mm`;
+      document.getElementById('val-joint-face').textContent = `${state.joint.rootFace.toFixed(1)} mm`;
+
+      // Probe values
+      document.getElementById('val-probe-coord').textContent = `(${state.probe.x}, ${state.probe.y}, ${state.probe.z}) mm`;
+      const histCoords = document.getElementById('txt-history-probe-coords');
+      if (histCoords) histCoords.textContent = `(${state.probe.x}, ${state.probe.y}, ${state.probe.z}) mm`;
+
+      // Trajectory values
+      document.getElementById('val-weave-amp').textContent = `${state.trajectory.amplitude.toFixed(1)} mm`;
+      document.getElementById('val-weave-freq').textContent = `${state.trajectory.frequency.toFixed(1)} Hz`;
+
+      // SVG update
+      updateGoldakSVG();
+    }
+
+    function setupEventListeners() {
+      // 1. Play / Pause / Restart
+      document.getElementById('btn-play-pause').addEventListener('click', () => {
+        setPlaying(!state.isPlaying);
+      });
+
+      document.getElementById('btn-restart').addEventListener('click', () => {
+        setPlaying(false);
+        state.currentTime = 0;
+        renderCurrentFrame();
+      });
+
+      // Spacebar hotkey
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+          e.preventDefault();
+          setPlaying(!state.isPlaying);
+        }
+      });
+
+      // Scrubber slider
+      const scrubber = document.getElementById('timeline-scrubber');
+      scrubber.addEventListener('input', (e) => {
+        setPlaying(false);
+        state.currentTime = parseFloat(e.target.value);
+        renderCurrentFrame();
+      });
+
+      // Playback speed buttons
+      document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.speed-btn').forEach(b => {
+            b.classList.remove('active', 'bg-white', 'shadow-xs', 'text-slate-900');
+            b.classList.add('text-slate-600');
+          });
+          btn.classList.add('active', 'bg-white', 'shadow-xs', 'text-slate-900');
+          btn.classList.remove('text-slate-600');
+          state.playbackSpeed = parseFloat(btn.getAttribute('data-speed'));
+        });
+      });
+
+      // Reset Camera
+      document.getElementById('btn-reset-camera').addEventListener('click', () => {
+        if (threeState.camera && threeState.controls) {
+          threeState.camera.position.set(50, -85, 75);
+          threeState.controls.target.set(50, 0, 0);
+          threeState.controls.update();
+          renderCurrentFrame();
+        }
+      });
+
+      // 2. Tab Navigation
+      document.querySelectorAll('.view-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.view-tab-btn').forEach(b => {
+            b.classList.remove('active', 'text-slate-900', 'border-slate-900', 'font-semibold');
+            b.classList.add('text-slate-500', 'border-transparent', 'font-medium');
+          });
+          btn.classList.add('active', 'text-slate-900', 'border-slate-900', 'font-semibold');
+          btn.classList.remove('text-slate-500', 'border-transparent', 'font-medium');
+
+          const tabId = btn.getAttribute('data-tab');
+          state.activeTab = tabId;
+
+          document.querySelectorAll('.tab-pane').forEach(p => {
+            p.classList.add('hidden');
+            p.classList.remove('flex');
+          });
+
+          const activePane = document.getElementById(tabId);
+          if (activePane) {
+            activePane.classList.remove('hidden');
+            activePane.classList.add('flex');
+          }
+
+          if (tabId === 'tab-3d') {
+            onThreeResize();
+          }
+
+          renderCurrentFrame();
+        });
+      });
+
+      // 3. Welding Parameter Inputs
+      document.getElementById('input-current').addEventListener('input', (e) => {
+        state.current = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-voltage').addEventListener('input', (e) => {
+        state.voltage = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-efficiency').addEventListener('input', (e) => {
+        state.efficiency = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-speed').addEventListener('input', (e) => {
+        state.speed = parseFloat(e.target.value);
+        updateUIElements();
+      });
+
+      // 4. Goldak Semi-Axes Inputs
+      document.getElementById('input-goldak-a').addEventListener('input', (e) => {
+        state.goldak.a = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-goldak-b').addEventListener('input', (e) => {
+        state.goldak.b = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-goldak-cf').addEventListener('input', (e) => {
+        state.goldak.cf = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-goldak-cr').addEventListener('input', (e) => {
+        state.goldak.cr = parseFloat(e.target.value);
+        updateUIElements();
+      });
+
+      // Energy Fractions: Enforce ff + fr = 2.0
+      document.getElementById('input-goldak-ff').addEventListener('input', (e) => {
+        const ff = parseFloat(e.target.value);
+        state.goldak.ff = ff;
+        state.goldak.fr = 2.0 - ff;
+        updateUIElements();
+      });
+
+      // 5. Materials Selection Presets
+      const matPresets = {
+        'mat-steel': { name: 'AISI 1020 Carbon Steel', k: 48, rho: 7850, cp: 480, tMelt: 1510 },
+        'mat-ss304': { name: 'SS 304 Stainless Steel', k: 16.2, rho: 7900, cp: 500, tMelt: 1450 },
+        'mat-al6061': { name: 'Al 6061-T6 Aluminum', k: 167, rho: 2700, cp: 896, tMelt: 650 }
+      };
+
+      document.querySelectorAll('.mat-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mat-preset-btn').forEach(b => {
+            b.classList.remove('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+            b.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+          });
+          btn.classList.add('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+          btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+
+          const data = matPresets[btn.id];
+          if (data) {
+            state.material.name = data.name;
+            state.material.k = data.k;
+            state.material.rho = data.rho;
+            state.material.cp = data.cp;
+            state.material.tMelt = data.tMelt;
+
+            document.getElementById('input-mat-k').value = data.k;
+            document.getElementById('input-mat-rho').value = data.rho;
+            document.getElementById('input-mat-cp').value = data.cp;
+            document.getElementById('input-mat-tmelt').value = data.tMelt;
+            document.getElementById('mat-tmelt-label').textContent = `Tmelt: ${data.tMelt}°C`;
+          }
+        });
+      });
+
+      // 6. Butt Joint Geometry
+      document.querySelectorAll('.joint-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.joint-type-btn').forEach(b => {
+            b.classList.remove('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+            b.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+          });
+          btn.classList.add('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+          btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+
+          if (btn.id === 'joint-square') state.joint.type = 'square';
+          else if (btn.id === 'joint-single-v') state.joint.type = 'single-v';
+          else if (btn.id === 'joint-double-v') state.joint.type = 'double-v';
+
+          renderCurrentFrame();
+        });
+      });
+
+      document.getElementById('input-joint-thick').addEventListener('input', (e) => {
+        state.joint.thickness = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+      document.getElementById('input-joint-angle').addEventListener('input', (e) => {
+        state.joint.angle = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+      document.getElementById('input-joint-gap').addEventListener('input', (e) => {
+        state.joint.rootGap = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+      document.getElementById('input-joint-face').addEventListener('input', (e) => {
+        state.joint.rootFace = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+
+      // 7. Trajectory Selection
+      const selTraj = document.getElementById('select-trajectory');
+      const weaveBox = document.getElementById('weave-controls');
+      selTraj.addEventListener('change', (e) => {
+        state.trajectory.type = e.target.value;
+        const nameMap = {
+          straight: 'Straight',
+          zigzag: 'Zigzag Weave',
+          sine: 'Sinusoidal Weave',
+          circular: 'Circular Motion'
+        };
+        document.getElementById('val-traj-name').textContent = nameMap[state.trajectory.type];
+        if (state.trajectory.type === 'straight') {
+          weaveBox.classList.add('hidden');
+        } else {
+          weaveBox.classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('input-weave-amp').addEventListener('input', (e) => {
+        state.trajectory.amplitude = parseFloat(e.target.value);
+        updateUIElements();
+      });
+      document.getElementById('input-weave-freq').addEventListener('input', (e) => {
+        state.trajectory.frequency = parseFloat(e.target.value);
+        updateUIElements();
+      });
+
+      // 8. Probe Coordinates
+      document.getElementById('input-probe-x').addEventListener('change', (e) => {
+        state.probe.x = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+      document.getElementById('input-probe-y').addEventListener('change', (e) => {
+        state.probe.y = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+      document.getElementById('input-probe-z').addEventListener('change', (e) => {
+        state.probe.z = parseFloat(e.target.value);
+        updateUIElements();
+        renderCurrentFrame();
+      });
+
+      // Probe preset buttons
+      document.querySelectorAll('.probe-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.probe.x = parseFloat(btn.getAttribute('data-x'));
+          state.probe.y = parseFloat(btn.getAttribute('data-y'));
+          state.probe.z = parseFloat(btn.getAttribute('data-z'));
+          document.getElementById('input-probe-x').value = state.probe.x;
+          document.getElementById('input-probe-y').value = state.probe.y;
+          document.getElementById('input-probe-z').value = state.probe.z;
+          updateUIElements();
+          runSimulation();
+        });
+      });
+
+      // 9. Slice X Slider (Cross Section)
+      const sliceSlider = document.getElementById('input-slice-x');
+      sliceSlider.addEventListener('input', (e) => {
+        state.sliceX = parseFloat(e.target.value);
+        document.getElementById('txt-slice-x').textContent = `${state.sliceX} mm`;
+        if (state.activeTab === 'tab-cross') renderCrossSection(state.currentTime);
+      });
+
+      document.getElementById('btn-sync-slice').addEventListener('click', () => {
+        const torch = getTorchPosition(state.currentTime);
+        state.sliceX = Math.round(torch.x);
+        sliceSlider.value = state.sliceX;
+        document.getElementById('txt-slice-x').textContent = `${state.sliceX} mm`;
+        if (state.activeTab === 'tab-cross') renderCrossSection(state.currentTime);
+      });
+
+      // 10. 3D Layer Toggles
+      document.getElementById('toggle-3d-torch').addEventListener('change', (e) => {
+        if (threeState.torchGroup) threeState.torchGroup.visible = e.target.checked;
+        renderCurrentFrame();
+      });
+      document.getElementById('toggle-3d-wireframe').addEventListener('change', (e) => {
+        if (threeState.wireframeMesh) threeState.wireframeMesh.visible = e.target.checked;
+        renderCurrentFrame();
+      });
+      document.getElementById('toggle-3d-probe').addEventListener('change', (e) => {
+        if (threeState.probeMesh) threeState.probeMesh.visible = e.target.checked;
+        renderCurrentFrame();
+      });
+
+      // 11. Top View Hover Inspector
+      const topCanvas = document.getElementById('canvas-top-view');
+      const hoverBadge = document.getElementById('top-hover-coords');
+      topCanvas.addEventListener('mousemove', (e) => {
+        const rect = topCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const padL = 40;
+        const padR = 25;
+        const padT = 20;
+        const padB = 35;
+        const plotW = topCanvas.width - padL - padR;
+        const plotH = topCanvas.height - padT - padB;
+
+        if (mouseX >= padL && mouseX <= padL + plotW && mouseY >= padT && mouseY <= padT + plotH) {
+          const x = ((mouseX - padL) / plotW) * 100.0;
+          const y = 25.0 - ((mouseY - padT) / plotH) * 50.0;
+          const temp = evaluateTemperatureAtPoint(x, y, 0.0, state.currentTime);
+          hoverBadge.textContent = `Cursor: X: ${x.toFixed(1)} mm, Y: ${y.toFixed(1)} mm | T: ${Math.round(temp)} °C`;
+        }
+      });
+
+      // 12. Run Simulation Button
+      document.getElementById('btn-run-sim').addEventListener('click', () => {
+        runSimulation();
+      });
+
+      // 13. "LOAD EXAMPLE" Button - One-click prefill and run
+      document.getElementById('btn-load-example').addEventListener('click', () => {
+        loadExampleScenario();
+      });
+    }
+
+    function loadExampleScenario() {
+      // GMAW Butt Weld on AISI 1020 Steel
+      state.current = 180;
+      state.voltage = 24;
+      state.efficiency = 0.80;
+      state.speed = 5.0;
+
+      state.goldak.a = 3.5;
+      state.goldak.b = 4.5;
+      state.goldak.cf = 3.0;
+      state.goldak.cr = 9.0;
+      state.goldak.ff = 0.6;
+      state.goldak.fr = 1.4;
+
+      state.joint.type = 'single-v';
+      state.joint.thickness = 8.0;
+      state.joint.angle = 60;
+      state.joint.rootGap = 1.5;
+      state.joint.rootFace = 1.5;
+
+      state.trajectory.type = 'straight';
+      state.probe.x = 45;
+      state.probe.y = 2.0;
+      state.probe.z = 1.0;
+
+      // Sync form input elements
+      document.getElementById('input-current').value = 180;
+      document.getElementById('input-voltage').value = 24;
+      document.getElementById('input-efficiency').value = 0.80;
+      document.getElementById('input-speed').value = 5.0;
+
+      document.getElementById('input-goldak-a').value = 3.5;
+      document.getElementById('input-goldak-b').value = 4.5;
+      document.getElementById('input-goldak-cf').value = 3.0;
+      document.getElementById('input-goldak-cr').value = 9.0;
+      document.getElementById('input-goldak-ff').value = 0.6;
+
+      document.getElementById('input-joint-thick').value = 8.0;
+      document.getElementById('input-joint-angle').value = 60;
+      document.getElementById('input-joint-gap').value = 1.5;
+      document.getElementById('input-joint-face').value = 1.5;
+
+      document.getElementById('select-trajectory').value = 'straight';
+      document.getElementById('weave-controls').classList.add('hidden');
+
+      document.getElementById('input-probe-x').value = 45;
+      document.getElementById('input-probe-y').value = 2.0;
+      document.getElementById('input-probe-z').value = 1.0;
+
+      // Reset material to AISI 1020
+      document.getElementById('mat-steel').click();
+
+      updateUIElements();
+      runSimulation();
+
+      // Trigger automatic playback
+      state.currentTime = 0;
+      setPlaying(true);
+    }
+
+    window.onload = function() {
+      initThreeJS();
+      updateGoldakSVG();
+      setupEventListeners();
+      updateUIElements();
+      runSimulation();
+    };
   </script>
 </body>
 </html>
